@@ -1,7 +1,7 @@
 import { useState, useContext, useEffect} from "react"
 import { useParams } from "react-router-dom";
 import axios from "axios";
-
+import { useAuthContext } from "../../hooks/useAuthContext";
 import ChatIcon from "./ChatIcon"
 import { ChatContext } from "../../context/ChatContext";
 import RestartIcon from "./RestartIcon";
@@ -9,6 +9,9 @@ import Typing from "./Typing";
 
 export default function Chat(){
     const { data } = useParams(); // Use useParams at the top level
+
+    const {user, dispatch}=useAuthContext()
+
 
     // Use useEffect to handle changes to the URL parameter
     useEffect(() => {
@@ -19,7 +22,7 @@ export default function Chat(){
 
     
 
-    const { chats, addChat,restartChatData, toggleProductClick, setToggleProductClick, toggleType, setToggleType, product, setProduct, typeOfProblem, setTypeOfProblem, toggleInput, setToggleInput , typing, setTyping} = useContext(ChatContext);
+    const { chats, addChat,restartChatData, toggleProductClick, setToggleProductClick, toggleType, setToggleType, product, setProduct, typeOfProblem, setTypeOfProblem, toggleInput, setToggleInput , typing, setTyping, orderList, setOrderList, orderSelected, setOrderSelected, orderClickToggle, setOrderClickToggle} = useContext(ChatContext);
 
     const [toggleChat, setToggleChat]=useState(false)
 
@@ -63,6 +66,40 @@ export default function Chat(){
             addChat({name:"bot", message:'Make sure you are on the product page you want to know about.'})
             setToggleProductClick(true)
         }
+
+        if(message==='Order Related Query'){
+            if(!user){
+                addChat({name:"bot", message:'You need to login first.'})
+            }
+            else{
+                setTyping(true)
+                const sendingData={'email':user.email}
+                axios.post('http://localhost:8000/checkorders', sendingData)
+                .then((response) => {               
+                    const json=response.data;
+                    setTyping(false)
+                    
+                    if (response.status === 200) {
+                        setOrderList(json)
+                        // console.log("The list is:   "+orderList)
+                        addChat({name:"bot", message:'Choose the order you have a query about'})
+                        setOrderClickToggle(true)
+                    }
+                    else{
+                        // Handle errors here
+                        console.error('Request failed');
+                        // setError(response.data.error)
+                            
+                    }                
+                })
+                        
+                .catch((error) => {
+                    console.error(error.response.data.error);
+                });
+
+            }
+            
+        }
     }
 
     const handleProductProblem=()=>{
@@ -92,11 +129,17 @@ export default function Chat(){
             console.error(error.response.data.error);
         });
 
-        
-       
+    }
 
 
+    const handleOrderProblem=(index)=>{
+        setOrderClickToggle(false)
+        setOrderList('')
+        addChat({name:"bot", message:'Enter your query'})
+        setToggleInput(true)
+        setOrderSelected(orderList[0])
 
+ 
     }
 
     const handleChange=(e)=>{
@@ -114,7 +157,7 @@ export default function Chat(){
             additionalInfo='Query related to: '+product.Name
         }
         if(typeOfProblem==='Order Related Query'){
-          
+            additionalInfo='Query related to product ordered: '+orderSelected.product
         }
 
         const sendingData={"message":inputText + '\n' + additionalInfo}
@@ -123,9 +166,10 @@ export default function Chat(){
         axios.post('http://localhost:8000/chat', sendingData)
         .then((response) => {               
             const json=response.data;
+            setTyping(false)
+            
             if (response.status === 200) {
                 
-                setTyping(false)
                 console.log("the response is"+json);
                 addChat({name:"bot", message:json})
                 setToggleInput(true)
@@ -149,6 +193,10 @@ export default function Chat(){
         restartChatData()
         setToggleProductClick(false)
         setTypeOfProblem('')
+        setOrderClickToggle(false)
+        setOrderSelected('')
+        setOrderList('')
+
         setToggleInput(false)
     }
 
@@ -217,11 +265,24 @@ export default function Chat(){
                     </div>
                     }
 
+                    
+
                     {toggleProductClick && 
                     <div className="flex flex-col">
                         <div onClick={handleProductProblem}  className="cursor-pointer text-black font-lato border-2 border-green-800 p-1 bg-green-100 mb-2 rounded-lg w-40">
                             Done
                         </div>
+                        
+                    </div>
+                    }
+
+                    {orderClickToggle && 
+                    <div className="flex flex-col">
+                        {orderList.map((order, index)=>(
+                            <div key={index} onClick={()=>handleOrderProblem(index)}  className="truncate cursor-pointer text-black font-lato border-2 border-green-800 p-1 bg-green-100 mb-2 rounded-lg w-full">
+                                {order.product}
+                            </div>
+                        ))}
                         
                     </div>
                     }

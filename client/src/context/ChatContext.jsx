@@ -11,6 +11,10 @@ export const ChatProvider = ({ children }) => {
 
     const [product, setProduct]=useState('')
 
+    
+    const [orderList, setOrderList]=useState('')
+    const [ orderClickToggle, setOrderClickToggle]=useState(false)
+    const [orderSelected, setOrderSelected]=useState('')
     const [typing, setTyping]=useState(false)
 
     const addChat = (...newChats) => {
@@ -26,7 +30,7 @@ export const ChatProvider = ({ children }) => {
     // };
 
     return (
-        <ChatContext.Provider value={{ chats, addChat,restartChatData, toggleProductClick, setToggleProductClick, toggleType, setToggleType, product, setProduct, typeOfProblem, setTypeOfProblem, toggleInput, setToggleInput, typing, setTyping }}>
+        <ChatContext.Provider value={{ chats, addChat,restartChatData, toggleProductClick, setToggleProductClick, toggleType, setToggleType, product, setProduct, typeOfProblem, setTypeOfProblem, toggleInput, setToggleInput, typing, setTyping, orderList, setOrderList,orderSelected, setOrderSelected,  orderClickToggle, setOrderClickToggle }}>
             {children}
         </ChatContext.Provider>
     );

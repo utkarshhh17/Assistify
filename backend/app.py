@@ -185,6 +185,25 @@ def order():
         
     except Exception as e:
         return jsonify(error=str(e)), 400
+    
+    
+@app.route('/checkorders', methods=['POST'])
+def check_orders():
+    data=request.get_json()
+    email=data.get("email")
+
+    try:
+        orders = list(order_collection.find({'email': email}))
+        
+        # Convert ObjectId to string for each order
+        for order in orders:
+            order['_id'] = str(order['_id'])
+        print(orders)
+        return jsonify(orders),200
+
+        
+    except Exception as e:
+        return jsonify(error=str(e)), 400
 
 
 
