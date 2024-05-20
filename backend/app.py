@@ -157,7 +157,7 @@ def chat():
     message=data.get("message")
     print(message)
     try:
-        client = Client("https://d815518c9ce5ce4bf2.gradio.live/")
+        client = Client("https://8588aa9270389f8e8f.gradio.live")
         result = client.predict(
 		message=message,
 		api_name="/chat"

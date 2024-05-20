@@ -60,7 +60,7 @@ export default function Chat(){
         }
 
         if(message==='Product Related Query'){
-            addChat({name:"bot", message:'Click on the product you want to know about.'})
+            addChat({name:"bot", message:'Make sure you are on the product page you want to know about.'})
             setToggleProductClick(true)
         }
     }
@@ -111,13 +111,14 @@ export default function Chat(){
         setInputText('')
         let additionalInfo=''
         if(typeOfProblem==='Product Related Query'){
-            additionalInfo='Query related to: '+product
+            additionalInfo='Query related to: '+product.Name
         }
         if(typeOfProblem==='Order Related Query'){
           
         }
 
         const sendingData={"message":inputText + '\n' + additionalInfo}
+        console.log(sendingData.message)
         setTyping(true)
         axios.post('http://localhost:8000/chat', sendingData)
         .then((response) => {               
