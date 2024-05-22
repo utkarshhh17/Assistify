@@ -1,4 +1,4 @@
-import { useState, useContext, useEffect} from "react"
+import { useState, useContext, useEffect, useRef} from "react"
 import { useParams } from "react-router-dom";
 import axios from "axios";
 import { useAuthContext } from "../../hooks/useAuthContext";
@@ -25,6 +25,9 @@ export default function Chat(){
     const { chats, addChat,restartChatData, toggleProductClick, setToggleProductClick, toggleType, setToggleType, product, setProduct, typeOfProblem, setTypeOfProblem, toggleInput, setToggleInput , typing, setTyping, orderList, setOrderList, orderSelected, setOrderSelected, orderClickToggle, setOrderClickToggle} = useContext(ChatContext);
 
     const [toggleChat, setToggleChat]=useState(false)
+    
+    const scrollRef = useRef(null);
+
 
     // const [chats,setChats]=useState([])
 
@@ -159,8 +162,14 @@ export default function Chat(){
         if(typeOfProblem==='Order Related Query'){
             additionalInfo='Query related to product ordered: '+orderSelected.product
         }
+        
 
-        const sendingData={"message":inputText + '\n' + additionalInfo}
+        let sendingData={"message":inputText + '\n' + additionalInfo}
+
+        if(user){
+            sendingData = {...sendingData,user: user.email};
+        }
+
         console.log(sendingData.message)
         setTyping(true)
         axios.post('http://localhost:8000/chat', sendingData)
@@ -198,8 +207,37 @@ export default function Chat(){
         setOrderList('')
 
         setToggleInput(false)
+
+        const sendingData={"email":user.email}
+        
+        
+        axios.post('http://localhost:8000/restart', sendingData)
+        .then((response) => {               
+            const json=response.data;
+            
+            if (response.status === 200) {
+                
+                console.log(json.status)
+    
+            }
+            else{
+                // Handle errors here
+                console.error('Request failed');
+                // setError(response.data.error)
+                    
+            }                
+        })
+                
+        .catch((error) => {
+            console.error(error.response.data.error);
+        });
     }
 
+    useEffect(() => {
+        if (scrollRef.current) {
+            scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+        }
+    }, [chats]);
 
    
     
@@ -219,7 +257,7 @@ export default function Chat(){
                     }
 
                     {chats.length>0 &&
-                        <div className="overflow-y-auto">
+                        <div className="overflow-y-auto" ref={scrollRef}>
                           {chats.map((chat, index)=>(
                             <li key={index} className="text-black flex justify-center w-full mb-2">
                                 {chat.name==='bot' &&
@@ -295,8 +333,10 @@ export default function Chat(){
 
                     {toggleInput && 
                     <div className="w-full flex mt-3">
+                        <form className="flex w-full">
                         <input type="text" className="h-10 outline-none font-lato border-b-2 w-80" onChange={handleChange} value={inputText}></input>
                         <button onClick={handleSend} className="font-lato bg-green-800 text-white text-sm p-2 rounded-lg ml-3">Send</button>
+                        </form>
                     </div>
                     }
 

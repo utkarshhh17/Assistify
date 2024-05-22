@@ -5,7 +5,7 @@ import re
 import pymongo
 from flask_cors import CORS
 from gradio_client import Client
-
+import threading
 from bson import ObjectId
 
 
@@ -27,6 +27,8 @@ db = client.Assistify
 users_collection = db.users
 products_collection = db.products
 order_collection=db.orders
+active_sentiment_collection=db.active_sentiment_collection
+negative_sentiment_collection=db.negative_sentiment_collection
 
 def is_email_valid(email):
     return re.match(r"[^@]+@[^@]+\.[^@]+", email)
@@ -77,6 +79,32 @@ def reset_user_password(email, password, newpassword):
     hashed_newpassword = bcrypt.generate_password_hash(newpassword).decode('utf-8')
     users_collection.update_one({"email": email}, {"set": {"password": hashed_newpassword}})
     return user
+
+def sentiment_analyser(data):
+
+    user_email=data.get('user')
+    message=data.get("message")
+
+
+    sentiment_pipeline = pipeline('sentiment-analysis')
+
+    sentiment = sentiment_pipeline(message)
+    # sentiment_label = sentiment['label']
+
+    print(sentiment[0])
+
+
+    if sentiment[0]['label']=='NEGATIVE':
+        print("sentiment is negative for message: "+message)
+        # Insert into active_sentiment_collection
+        active_sentiment_collection.insert_one({'email': user_email, 'message': message, 'sentiment': sentiment[0]})
+        
+        # Count number of entries for the same user
+        user_count = active_sentiment_collection.count_documents({'email': user_email})
+        if user_count > 3:
+            negative_sentiment_collection.insert_many({'email': user_email})
+            active_sentiment_collection.delete_many({'email': user_email})
+
 
 # Routes
 @app.route('/signup', methods=['POST'])
@@ -150,14 +178,23 @@ def get_product(data):
     else:
         return jsonify({"error": "Product not found"}), 404
     
+from transformers import pipeline
 
 @app.route('/chat', methods=['POST'])
 def chat():
     data=request.get_json()
     message=data.get("message")
+    user_email=data.get("user")
+    
+
     print(message)
+
+    thread = threading.Thread(target=sentiment_analyser, args=(data,))
+    thread.start()
+
+    
     try:
-        client = Client("https://8588aa9270389f8e8f.gradio.live")
+        client = Client("https://0e0e41a2dd10a9916b.gradio.live")
         result = client.predict(
 		message=message,
 		api_name="/chat"
@@ -200,6 +237,20 @@ def check_orders():
             order['_id'] = str(order['_id'])
         print(orders)
         return jsonify(orders),200
+
+        
+    except Exception as e:
+        return jsonify(error=str(e)), 400
+    
+@app.route('/restart', methods=['POST'])
+def restart():
+    data=request.get_json()
+    email=data.get("email")
+
+    try:
+        active_sentiment_collection.delete_many({'email': email})
+        status={'status':'ok'}
+        return jsonify(status),200
 
         
     except Exception as e:
