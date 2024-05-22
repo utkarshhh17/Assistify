@@ -200,6 +200,7 @@ export default function Chat(){
 
     const restartChat=()=>{
         restartChatData()
+        setToggleType(false)
         setToggleProductClick(false)
         setTypeOfProblem('')
         setOrderClickToggle(false)
