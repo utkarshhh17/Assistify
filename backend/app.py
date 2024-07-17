@@ -189,14 +189,14 @@ def chat():
 
     print(message)
 
-    thread = threading.Thread(target=sentiment_analyser, args=(data,))
-    thread.start()
+    # thread = threading.Thread(target=sentiment_analyser, args=(data,))
+    # thread.start()
 
     
     try:
-        client = Client("https://0e0e41a2dd10a9916b.gradio.live")
+        client = Client("https://754fe41966b866ed7a.gradio.live/")
         result = client.predict(
-		message=message,
+		input=message,
 		api_name="/chat"
         )
         return jsonify(result),200
