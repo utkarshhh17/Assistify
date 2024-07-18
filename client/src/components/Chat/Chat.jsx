@@ -298,9 +298,9 @@ export default function Chat(){
                         <div onClick={()=>handleProblemType("Product Related Query")}  className="cursor-pointer text-black font-lato border-2 border-green-800 p-1 bg-green-100 mb-2 rounded-lg w-60">
                             Product Related Query
                         </div>
-                        <div onClick={()=>handleProblemType("Order Related Query")}  className="cursor-pointer text-black font-lato border-2 border-green-800 p-1 bg-green-100 rounded-lg w-60">
+                        {/* <div onClick={()=>handleProblemType("Order Related Query")}  className="cursor-pointer text-black font-lato border-2 border-green-800 p-1 bg-green-100 rounded-lg w-60">
                             Order Related Query
-                        </div>
+                        </div> */}
                     </div>
                     }
 
